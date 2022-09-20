@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+app_version="0.1"
+app_revision="alpha"
+
 set -e -u
 shopt -s extglob
 
@@ -81,6 +84,7 @@ _msg_error() {
 # $1: exit status number.
 _usage() {
     IFS='' read -r -d '' usagetext <<ENDUSAGETEXT || true
+${app_name} ${app_version} (${app_revision})
 usage: ${app_name} [options] <profile_dir>
   options:
      -A <application> Set an application name for the ISO
