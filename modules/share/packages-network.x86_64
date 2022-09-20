@@ -1,0 +1,42 @@
+# LAN
+dhclient
+dnsutils
+ndisc6
+networkmanager
+ppp
+pptpclient
+rp-pppoe
+wvdial
+bind-util
+net-tools
+
+# server
+openssh
+
+# downloader
+wget
+curl
+
+# dns
+dnsmasq
+
+# WiFi
+crda
+iwd
+wireless-regdb
+wireless_tools
+wpa_supplicant
+
+# VPN
+networkmanager-openvpn
+openconnect
+openvpn
+vpnc
+xl2tpd
+
+# Utils
+ethtool
+gnu-netcat
+nmap
+rsync
+tcpdump
