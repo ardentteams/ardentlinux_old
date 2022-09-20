@@ -2,3 +2,18 @@
 
 ARDENTISO_VERSION="0.1 alpha"
 
+
+_msg_info() {
+:
+}
+
+_msg_warn() {
+:
+}
+
+_msg_error() {
+:
+}
+
+
+
