@@ -21,15 +21,16 @@ export SOURCE_DATE_EPOCH
 
 # Set application name from the script's file name
 app_name="${0##*/}"
-
+debug=""
 # Define global variables. All of them will be overwritten later
 script_path="$( cd -P "$( dirname "$(readlink -f "${0}")" )" && pwd )"
 module_dir="${script_path}/modules"
-
 default_module=("base")
+modules+=("${default_module}")
+noconfirm="false"
 pkg_list=()
 bootstrap_pkg_list=()
-quiet=""
+quiet="n"
 work_dir=""
 out_dir=""
 gpg_key=""
@@ -45,7 +46,7 @@ pacman_conf=""
 packages=""
 bootstrap_packages=""
 pacstrap_dir=""
-buildmodes=()
+buildmodes="iso"
 bootmodes=()
 airootfs_image_type=""
 airootfs_image_tool_options=()
@@ -57,6 +58,12 @@ efiboot_files=()
 # adapted from GRUB_EARLY_INITRD_LINUX_STOCK in https://git.savannah.gnu.org/cgit/grub.git/tree/util/grub-mkconfig.in
 readonly ucodes=('intel-uc.img' 'intel-ucode.img' 'amd-uc.img' 'amd-ucode.img' 'early_ucode.cpio' 'microcode.cpio')
 
+for_module() {
+    local module
+    for module in "${modules[@]}"; do
+        eval "${@//"{}"/${module}}"
+    done
+}
 
 # Show an INFO message
 # $1: message string
@@ -127,6 +134,17 @@ ENDUSAGETEXT
     exit "${1}"
 }
 
+_build_confirm() {
+    if [[ "${noconfirm}" = false ]]; then
+        echo -e "\nPress Enter to continue or Ctrl + C to cancel."
+        read -r
+    fi
+    trap HUP INT QUIT TERM
+    trap 'umount_trap' HUP INT QUIT TERM
+    trap 'error_exit_trap $LINENO' ERR
+    return 0
+}
+
 # Shows configuration options.
 _show_config() {
     local build_date
@@ -151,7 +169,9 @@ _show_config() {
     _msg_info "               Boot modes:   ${bootmodes[*]:-None}"
     _msg_info "            Packages File:   ${buildmode_packages}"
     _msg_info "                 Packages:   ${buildmode_pkg_list[*]}"
+    _build_confirm
 }
+
 
 # Cleanup airootfs
 _cleanup_pacstrap_dir() {
@@ -1708,7 +1728,7 @@ _build() {
     done
 }
 
-while getopts 'c:p:C:L:P:A:D:w:m:o:g:G:vh?' arg; do
+while getopts 'c:p:C:L:P:A:D:w:m:o:g:G:qdyh?' arg; do
     case "${arg}" in
         p) read -r -a override_pkg_list <<< "${OPTARG}" ;;
         C) override_pacman_conf="${OPTARG}" ;;
@@ -1722,7 +1742,9 @@ while getopts 'c:p:C:L:P:A:D:w:m:o:g:G:vh?' arg; do
         o) override_out_dir="${OPTARG}" ;;
         g) override_gpg_key="${OPTARG}" ;;
         G) override_gpg_sender="${OPTARG}" ;;
-        v) override_quiet="n" ;;
+        q) override_quiet="y" ;;
+        y) noconfirm="true";;
+        d) debug=true ;;
         h|?) _usage 0 ;;
         *)
             _msg_error "Invalid argument '${arg}'" 0
@@ -1730,6 +1752,8 @@ while getopts 'c:p:C:L:P:A:D:w:m:o:g:G:vh?' arg; do
             ;;
     esac
 done
+
+[[ "${debug}" = true ]] && set -x -v
 
 shift $((OPTIND - 1))
 
