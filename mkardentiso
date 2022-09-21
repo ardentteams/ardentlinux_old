@@ -25,8 +25,8 @@ debug=""
 # Define global variables. All of them will be overwritten later
 script_path="$( cd -P "$( dirname "$(readlink -f "${0}")" )" && pwd )"
 module_dir="${script_path}/modules"
-default_module=("base")
-modules+=("${default_module}")
+#default_module=("base" "share")
+modules=()
 noconfirm="false"
 pkg_list=()
 bootstrap_pkg_list=()
@@ -152,6 +152,7 @@ _show_config() {
     _msg_info "${app_name} configuration settings"
     _msg_info "             Architecture:   ${arch}"
     _msg_info "        Working directory:   ${work_dir}"
+    _msg_info "                   Module:   ${modules[*]}"
     _msg_info "   Installation directory:   ${install_dir}"
     _msg_info "               Build date:   ${build_date}"
     _msg_info "         Output directory:   ${out_dir}"
@@ -1129,10 +1130,20 @@ _validate_requirements_buildmode_bootstrap() {
 _validate_common_requirements_buildmode_iso_netboot() {
     local bootmode
     local pkg_list_from_file=()
+    local __module_packagelist
+    local __temp_packagelist
+    
+    mapfile -t __module_packagelist < <(echo "$(_read_package_list)")
+    packages+=("${__module_packagelist[@]}")
+
 
     # Check if the package list file exists and read packages from it
     if [[ -e "${packages}" ]]; then
-        mapfile -t pkg_list_from_file < <(sed '/^[[:blank:]]*#.*/d;s/#.*//;/^[[:blank:]]*$/d' "${packages}")
+        for pp_list in ${packages[*]};do
+            mapfile -t __temp_packagelist < <(sed '/^[[:blank:]]*#.*/d;s/#.*//;/^[[:blank:]]*$/d' "${pp_list}")
+            echo ${__temp_packagelist[@]}
+            pkg_list_from_file+=("${__temp_packagelist[@]}")
+        done
         pkg_list+=("${pkg_list_from_file[@]}")
         if (( ${#pkg_list_from_file[@]} < 1 )); then
             (( validation_error=validation_error+1 ))
@@ -1453,6 +1464,16 @@ _build_iso_image() {
             "${isofs_dir}/"
     _msg_info "Done!"
     du -h -- "${out_dir}/${image_name}"
+}
+
+# Read Package List on Modules
+_read_package_list() {
+  local __temp_list_files=()
+  #echo ${modules[*]}
+  for module_pp in ${modules[*]};do
+      __temp_list_files+=("$(realpath -P -- "${module_dir}/${module_pp}/packages-*.${arch}")")
+  done
+  echo ${__temp_list_files[*]}
 }
 
 # Read profile's values from profiledef.sh
