@@ -1,0 +1,21 @@
+# Base
+
+base-devel
+bash
+
+# Microcode
+intel-ucode
+amd-ucode
+
+# Editor
+vim
+neovim
+
+# EFI Shell
+edk2-shell
+
+# nfs utils
+mkinitcpio-nfs-utils
+
+# network block
+nbd

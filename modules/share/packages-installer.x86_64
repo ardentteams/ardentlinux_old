@@ -1,0 +1,16 @@
+# Installer
+arch-install-scripts
+
+# CLI Utils
+bash-completion
+zsh
+git
+jq
+mc
+
+# Firmware
+linux-firmware
+
+# Man
+man-db
+man-pages
