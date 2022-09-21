@@ -43,6 +43,7 @@ iso_label=""
 iso_publisher=""
 iso_application=""
 iso_version=""
+isofs_dir=""
 install_dir=""
 arch=""
 pacman_conf=""
@@ -441,8 +442,8 @@ _make_boot_on_iso9660() {
     local ucode_image
     _msg_info "Preparing kernel and initramfs for the ISO 9660 file system..."
     install -d -m 0755 -- "${isofs_dir}/${install_dir}/boot/${arch}"
-    install -m 0644 -- "${pacstrap_dir}/boot/initramfs-"*".img" "${isofs_dir}/${install_dir}/boot/${arch}/"
-    install -m 0644 -- "${pacstrap_dir}/boot/vmlinuz-"* "${isofs_dir}/${install_dir}/boot/${arch}/"
+    install -m 0644 -- "${pacstrap_dir}/boot/initramfs-*.img" "${isofs_dir}/${install_dir}/boot/${arch}/"
+    install -m 0644 -- "${pacstrap_dir}/boot/vmlinuz-*" "${isofs_dir}/${install_dir}/boot/${arch}/"
 
     for ucode_image in "${ucodes[@]}"; do
         if [[ -e "${pacstrap_dir}/boot/${ucode_image}" ]]; then
@@ -1689,6 +1690,7 @@ _build_iso_base() {
     _run_once _make_packages
     _run_once _make_version
     _run_once _make_customize_airootfs
+    _run_once _make_setup_mkinitcpio
     _run_once _make_pkglist
     if [[ "${buildmode}" == 'netboot' ]]; then
         _run_once _make_boot_on_iso9660

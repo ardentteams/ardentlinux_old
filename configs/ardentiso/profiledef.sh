@@ -7,9 +7,12 @@ iso_label="ARDENT_$(date +%Y%m)"
 iso_publisher="Ardent Linux <https://archlinux.org>"
 iso_application="Ardent Linux Live/Rescue CD"
 iso_version="$(date +%Y.%m.%d)"
-install_dir="ardent"
+install_dir="archiso"
 buildmodes=('iso')
-bootmodes=('uefi-x64.grub.esp' 'uefi-x64.grub.eltorito')
+bootmodes=( 'uefi-ia32.grub.esp' 'uefi-x64.grub.esp'
+            'uefi-ia32.grub.eltorito' 'uefi-x64.grub.eltorito')
+
+
 arch="x86_64"
 pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
