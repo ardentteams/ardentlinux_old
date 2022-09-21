@@ -1141,7 +1141,6 @@ _validate_common_requirements_buildmode_iso_netboot() {
     if [[ -e "${packages}" ]]; then
         for pp_list in ${packages[*]};do
             mapfile -t __temp_packagelist < <(sed '/^[[:blank:]]*#.*/d;s/#.*//;/^[[:blank:]]*$/d' "${pp_list}")
-            echo ${__temp_packagelist[@]}
             pkg_list_from_file+=("${__temp_packagelist[@]}")
         done
         pkg_list+=("${pkg_list_from_file[@]}")

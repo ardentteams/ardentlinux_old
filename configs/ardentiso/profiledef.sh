@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 iso_name="Ardentlinux"
-modules=("base" "share")
+modules=("base")
 iso_label="ARDENT_$(date +%Y%m)"
 iso_publisher="Ardent Linux <https://archlinux.org>"
 iso_application="Ardent Linux Live/Rescue CD"
