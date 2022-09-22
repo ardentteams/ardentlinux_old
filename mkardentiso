@@ -337,13 +337,21 @@ _make_pacman_conf() {
 # Prepare working directory and copy custom root file system files.
 _make_custom_airootfs() {
     local passwd=()
+    local _airootfs_list=()
     local filename permissions
+
+    for_module '_airootfs_list=("${module_dir}/{}/airootfs")'
+    _airootfs_list+=("${profile}/airootfs")
 
     install -d -m 0755 -o 0 -g 0 -- "${pacstrap_dir}"
 
-    if [[ -d "${profile}/airootfs" ]]; then
-        _msg_info "Copying custom airootfs files..."
-        cp -af --no-preserve=ownership,mode -- "${profile}/airootfs/." "${pacstrap_dir}"
+    # Module and Profile airootfs added
+    for _airootfs in "${_airootfs_list[@]}"; do
+        if [[ -d "${_airootfs}" ]]; then
+            _msg_info "Copying custom airootfs files..."
+            cp -af --no-preserve=ownership,mode -- "${airootfs}/." "${pacstrap_dir}"
+        fi
+    done
         # Set ownership and mode for files and directories
         for filename in "${!file_permissions[@]}"; do
             IFS=':' read -ra permissions <<< "${file_permissions["${filename}"]}"
@@ -364,7 +372,6 @@ _make_custom_airootfs() {
             fi
         done
         _msg_info "Done!"
-    fi
 }
 
 # Install desired packages to the root file system
