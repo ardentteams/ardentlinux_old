@@ -4,6 +4,7 @@
 
 app_version="0.1"
 app_revision="alpha"
+app_codename="unkown"
 
 set -e -u
 shopt -s extglob
@@ -21,12 +22,16 @@ export SOURCE_DATE_EPOCH
 
 # Set application name from the script's file name
 app_name="${0##*/}"
+version_code="${app_name} v${app_version} (${app_revision}/${app_codename})"
+
 debug=""
 # Define global variables. All of them will be overwritten later
 script_path="$( cd -P "$( dirname "$(readlink -f "${0}")" )" && pwd )"
 module_dir="${script_path}/modules"
+kernel_dir="${module_dir}/kernel"
 #default_module=("base" "share")
 modules=()
+kernel_name=()
 noconfirm="false"
 pkg_list=()
 bootstrap_pkg_list=()
@@ -40,6 +45,7 @@ iso_label=""
 iso_publisher=""
 iso_application=""
 iso_version=""
+isofs_dir=""
 install_dir=""
 arch=""
 pacman_conf=""
@@ -95,7 +101,7 @@ _msg_error() {
 # $1: exit status number.
 _usage() {
     IFS='' read -r -d '' usagetext <<ENDUSAGETEXT || true
-${app_name} ${app_version} (${app_revision})
+${version_code}
 usage: ${app_name} [options] <profile_dir>
   options:
      -A <application> Set an application name for the ISO
@@ -151,6 +157,7 @@ _show_config() {
     printf -v build_date '%(%FT%R%z)T' "${SOURCE_DATE_EPOCH}"
     _msg_info "${app_name} configuration settings"
     _msg_info "             Architecture:   ${arch}"
+    _msg_info "                   Kernel:   ${kernel_name}"
     _msg_info "        Working directory:   ${work_dir}"
     _msg_info "                   Module:   ${modules[*]}"
     _msg_info "   Installation directory:   ${install_dir}"
@@ -333,13 +340,21 @@ _make_pacman_conf() {
 # Prepare working directory and copy custom root file system files.
 _make_custom_airootfs() {
     local passwd=()
+    local _airootfs_list=()
     local filename permissions
+
+    for_module '_airootfs_list=("${module_dir}/{}/airootfs")'
+    _airootfs_list+=("${profile}/airootfs")
 
     install -d -m 0755 -o 0 -g 0 -- "${pacstrap_dir}"
 
-    if [[ -d "${profile}/airootfs" ]]; then
-        _msg_info "Copying custom airootfs files..."
-        cp -af --no-preserve=ownership,mode -- "${profile}/airootfs/." "${pacstrap_dir}"
+    # Module and Profile airootfs added
+    for _airootfs in "${_airootfs_list[@]}"; do
+        if [[ -d "${_airootfs}" ]]; then
+            _msg_info "Copying custom airootfs files..."
+            cp -af --no-preserve=ownership,mode -- "${airootfs}/." "${pacstrap_dir}"
+        fi
+    done
         # Set ownership and mode for files and directories
         for filename in "${!file_permissions[@]}"; do
             IFS=':' read -ra permissions <<< "${file_permissions["${filename}"]}"
@@ -360,7 +375,6 @@ _make_custom_airootfs() {
             fi
         done
         _msg_info "Done!"
-    fi
 }
 
 # Install desired packages to the root file system
@@ -438,8 +452,8 @@ _make_boot_on_iso9660() {
     local ucode_image
     _msg_info "Preparing kernel and initramfs for the ISO 9660 file system..."
     install -d -m 0755 -- "${isofs_dir}/${install_dir}/boot/${arch}"
-    install -m 0644 -- "${pacstrap_dir}/boot/initramfs-"*".img" "${isofs_dir}/${install_dir}/boot/${arch}/"
-    install -m 0644 -- "${pacstrap_dir}/boot/vmlinuz-"* "${isofs_dir}/${install_dir}/boot/${arch}/"
+    install -m 0644 -- "${pacstrap_dir}/boot/initramfs-*.img" "${isofs_dir}/${install_dir}/boot/${arch}/"
+    install -m 0644 -- "${pacstrap_dir}/boot/vmlinuz-*" "${isofs_dir}/${install_dir}/boot/${arch}/"
 
     for ucode_image in "${ucodes[@]}"; do
         if [[ -e "${pacstrap_dir}/boot/${ucode_image}" ]]; then
@@ -1470,8 +1484,13 @@ _read_package_list() {
   local __temp_list_files=()
   #echo ${modules[*]}
   for module_pp in ${modules[*]};do
-      __temp_list_files+=("$(realpath -P -- "${module_dir}/${module_pp}/packages-*.${arch}")")
+        __temp_list_files+=("$(realpath -P -- "${module_dir}/${module_pp}/packages-*.${arch}")")
   done
+  if [[ -n "${kernel_name}" ]];then
+    __temp_list_files+=("$(realpath -P -- "${kernel_dir}/${kernel_name}.${arch}")")
+  else
+    _msg_error "No Kernel selected!" 1
+  fi
   echo ${__temp_list_files[*]}
 }
 
@@ -1686,6 +1705,7 @@ _build_iso_base() {
     _run_once _make_packages
     _run_once _make_version
     _run_once _make_customize_airootfs
+    _run_once _make_setup_mkinitcpio
     _run_once _make_pkglist
     if [[ "${buildmode}" == 'netboot' ]]; then
         _run_once _make_boot_on_iso9660

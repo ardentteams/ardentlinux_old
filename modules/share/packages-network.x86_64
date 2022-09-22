@@ -7,7 +7,7 @@ ppp
 pptpclient
 rp-pppoe
 wvdial
-bind-util
+bind
 net-tools
 
 # server

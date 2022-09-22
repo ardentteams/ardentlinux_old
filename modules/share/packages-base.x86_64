@@ -16,6 +16,7 @@ edk2-shell
 
 # nfs utils
 mkinitcpio-nfs-utils
+mkinitcpio-archiso
 
 # network block
 nbd
