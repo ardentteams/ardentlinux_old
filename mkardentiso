@@ -28,8 +28,10 @@ debug=""
 # Define global variables. All of them will be overwritten later
 script_path="$( cd -P "$( dirname "$(readlink -f "${0}")" )" && pwd )"
 module_dir="${script_path}/modules"
+kernel_dir="${module_dir}/kernel"
 #default_module=("base" "share")
 modules=()
+kernel_name=()
 noconfirm="false"
 pkg_list=()
 bootstrap_pkg_list=()
@@ -155,6 +157,7 @@ _show_config() {
     printf -v build_date '%(%FT%R%z)T' "${SOURCE_DATE_EPOCH}"
     _msg_info "${app_name} configuration settings"
     _msg_info "             Architecture:   ${arch}"
+    _msg_info "                   Kernel:   ${kernel_name}"
     _msg_info "        Working directory:   ${work_dir}"
     _msg_info "                   Module:   ${modules[*]}"
     _msg_info "   Installation directory:   ${install_dir}"
@@ -1481,8 +1484,13 @@ _read_package_list() {
   local __temp_list_files=()
   #echo ${modules[*]}
   for module_pp in ${modules[*]};do
-      __temp_list_files+=("$(realpath -P -- "${module_dir}/${module_pp}/packages-*.${arch}")")
+        __temp_list_files+=("$(realpath -P -- "${module_dir}/${module_pp}/packages-*.${arch}")")
   done
+  if [[ -n "${kernel_name}" ]];then
+    __temp_list_files+=("$(realpath -P -- "${kernel_dir}/${kernel_name}.${arch}")")
+  else
+    _msg_error "No Kernel selected!" 1
+  fi
   echo ${__temp_list_files[*]}
 }
 
