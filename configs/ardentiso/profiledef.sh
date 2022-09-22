@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 iso_name="Ardentlinux"
-modules=("base" "share")
+modules=("base" "share" "gui")
 iso_label="ARDENT_$(date +%Y%m)"
 iso_publisher="Ardent Linux <https://archlinux.org>"
 iso_application="Ardent Linux Live/Rescue CD"
@@ -12,7 +12,7 @@ buildmodes=('iso')
 bootmodes=( 'uefi-ia32.grub.esp' 'uefi-x64.grub.esp'
             'uefi-ia32.grub.eltorito' 'uefi-x64.grub.eltorito')
 
-
+kernel_name="lts"
 arch="x86_64"
 pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
